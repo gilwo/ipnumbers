@@ -50,7 +50,23 @@ const (
 var octecBaseSlice = []uint64{octecBase1, octecBase2, octecBase3, octecBase4, octecBase5, octecBase6, octecBase7, octecBase8}
 var octecMaskSlice = []uint64{octecMask1, octecMask2, octecMask3, octecMask4, octecMask5, octecMask6, octecMask7, octecMask8}
 
-// convert an ip (either ipv4 or ipv6) from string represnetation
+// NetIPtouint64 convert an ip from net.IP type to number representation in 2 uint64
+// numbers, high and low
+func NetIPtouint64(ip *net.IP) (high, low uint64) {
+	lip := *ip
+	if ip.To4() == nil {
+		lip[10] = 0
+		lip[11] = 0
+	}
+	for i := range octecBaseSlice {
+		high += octecBaseSlice[i] * (uint64)(lip[i])
+		low += octecBaseSlice[i] * (uint64)(lip[i+8])
+	}
+
+	return
+}
+
+// IPtouint64 convert an ip (either ipv4 or ipv6) from string represnetation
 // to number representation in 2 uint64 numbers, high and low
 //
 // invalid ip address will cause an error to return (high and low will be 0)
@@ -65,24 +81,16 @@ func IPtouint64(ip string) (high, low uint64, err error) {
 		}
 	}
 
-	if ipaddr.To4() != nil {
-		ipaddr[10] = 0
-		ipaddr[11] = 0
-	}
-
-	for i, _ := range octecBaseSlice {
-		high += octecBaseSlice[i] * (uint64)(ipaddr[i])
-		low += octecBaseSlice[i] * (uint64)(ipaddr[i+8])
-	}
+	high, low = NetIPtouint64(&ipaddr)
 
 	return
 }
 
-// convert 2 numbers of uint64 (high and low) to a string representation of the the ip address
+// Uint64toip convert 2 numbers of uint64 (high and low) to a string representation of the the ip address
 // and to a net.IP type object
 func Uint64toip(high, low uint64) (ip string, netip net.IP) {
 	var bytelow, bytehigh, byteip []byte
-	for i, _ := range octecMaskSlice {
+	for i := range octecMaskSlice {
 		bytelow = append(bytelow, (byte)((octecMaskSlice[i]&low)/octecBaseSlice[i]))
 		bytehigh = append(bytehigh, (byte)((octecMaskSlice[i]&high)/octecBaseSlice[i]))
 	}
