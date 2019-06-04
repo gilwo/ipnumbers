@@ -53,7 +53,7 @@ var octecMaskSlice = []uint64{octecMask1, octecMask2, octecMask3, octecMask4, oc
 // NetIPtouint64 convert an ip from net.IP type to number representation in 2 uint64
 // numbers, high and low
 func NetIPtouint64(ip *net.IP) (high, low uint64) {
-	lip := *ip
+	lip := ip.To16()
 	if ip.To4() == nil {
 		lip[10] = 0
 		lip[11] = 0
